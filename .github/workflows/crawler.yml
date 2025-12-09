@@ -87,7 +87,10 @@ jobs:
           
           # 清理旧文件夹：只保留最近 20 天内的
           curr_dir="$(dirname $0)"
-          cd ${curr_dir}/output
+          set +e
+          ls ${curr_dir}/*
+          set -e
+          
           echo "🧹 Cleaning up old directories (older than 20 days)..."
           
           # 获取当前日期（格式化为 YYYY-MM-DD）
