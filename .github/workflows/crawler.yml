@@ -85,6 +85,15 @@ jobs:
           echo "🔄 Syncing with remote (branch: $BRANCH_NAME)..."
           git fetch origin $BRANCH_NAME
           
+          # 保存当前更改
+          git stash --include-untracked || echo "Nothing to stash"
+          
+          # 同步到远程最新
+          git reset --hard origin/$BRANCH_NAME
+          
+          # 恢复本次更改
+          git stash pop || echo "Nothing to pop"
+
           # 清理旧文件夹：只保留最近 20 天内的
           curr_dir="$(dirname $0)"
           set +e
@@ -127,16 +136,6 @@ jobs:
               fi
             fi
           done
-          
-          # 保存当前更改
-          git stash --include-untracked || echo "Nothing to stash"
-          
-          # 同步到远程最新
-          git reset --hard origin/$BRANCH_NAME
-          
-          # 恢复本次更改
-          git stash pop || echo "Nothing to pop"
-          
           
           git add -A
           
