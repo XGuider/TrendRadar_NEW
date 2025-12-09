@@ -85,6 +85,46 @@ jobs:
           echo "🔄 Syncing with remote (branch: $BRANCH_NAME)..."
           git fetch origin $BRANCH_NAME
           
+          # 清理旧文件夹：只保留最近 20 天内的
+          curr_dir="$(dirname $0)"
+          cd ${curr_dir}/output
+          echo "🧹 Cleaning up old directories (older than 20 days)..."
+          
+          # 获取当前日期（格式化为 YYYY-MM-DD）
+          CURRENT_DATE=$(date -d "today" +"%Y-%m-%d")
+          
+          # 计算 20 天前的日期
+          CUTOFF_DATE=$(date -d "20 days ago" +"%Y-%m-%d")
+          
+          echo "📅 Current date: $CURRENT_DATE"
+          echo "⏰ Cutoff date: $CUTOFF_DATE"
+          
+          # 遍历所有以 '2025年' 开头的文件夹
+          for dir in *; do
+            if [[ -d "$dir" && "$dir" =~ ^202[5-9]年 ]]; then
+              # 提取年、月、日并转换为 YYYY-MM-DD
+              # 示例：2025年11月02日 → 2025-11-02
+              year=$(echo "$dir" | cut -d'年' -f1)
+              month=$(echo "$dir" | cut -d'年' -f2 | cut -d'月' -f1)
+              day=$(echo "$dir" | cut -d'月' -f2 | cut -d'日' -f1)
+          
+              # 补零处理（如 1 → 01）
+              month=$(printf "%02d" "$month")
+              day=$(printf "%02d" "$day")
+          
+              # 组合成标准日期
+              folder_date="${year}-${month}-${day}"
+          
+              # 比较日期：如果比 cutoff 早，则删除
+              if [[ "$folder_date" < "$CUTOFF_DATE" ]]; then
+                echo "🗑️ Deleting old directory: $dir"
+                rm -rf "$dir"
+              else
+                echo "✅ Keeping recent directory: $dir"
+              fi
+            fi
+          done
+          
           # 保存当前更改
           git stash --include-untracked || echo "Nothing to stash"
           
@@ -93,6 +133,7 @@ jobs:
           
           # 恢复本次更改
           git stash pop || echo "Nothing to pop"
+          
           
           git add -A
           
